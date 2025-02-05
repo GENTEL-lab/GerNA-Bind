@@ -25,7 +25,7 @@
   - [CheckPoints](#checkpoints)
   - [RNA Small Molecule Screening](#rna-small-molecule-screening)
   - [RNA Target Binding Site Prediction](#rna-target-binding-site-prediction)
-- [Citation](#citation)
+<!-- - [Citation](#citation) -->
 - [Acknowledgements](#acknowledgements)
 
 ## Installation
@@ -115,7 +115,7 @@ python inference_binding_site.py
 ## License
 No Commercial use of either the model nor generated data, details to be found in license.md.
 
-## Citation
+<!-- ## Citation
 🤗 If you find our code useful or our work relevant, please consider citing:
 
 ```
@@ -125,7 +125,7 @@ No Commercial use of either the model nor generated data, details to be found in
   journal={arXiv preprint arXiv:****.*****},
   year={2025}
 }
-```
+``` -->
 
 ## Acknowledgements
 
