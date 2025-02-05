@@ -1,0 +1,19 @@
+I.CNC(NCCCN1c2ccccc2Sc2ccccc12)=NC
+COc1ccc(CCNCc2cn(C)nc2-c2ccncc2)cc1
+Cc1ccc(CNC(c2nccn2C)c2ccc(F)cc2)cc1C
+Cl.Cc1n[nH]c2ncc(CNCc3ccc4OCOc4c3)cc12
+COc1cccc(c1)-c1n[nH]cc1CNCc1ccccc1
+CCOc1cc(CNC(c2nccn2C)c2ccc(F)cc2)ccc1OC
+Cc1nn2c(NCCN3CCOCC3)c(C)c(C)nc2c1-c1ccccc1
+CCn1c(NCc2ccc3OCOc3c2)nc2ccccc12
+CCC(=O)Nc1nc2ccccc2n1CCN1CCCCC1
+OC(CN1CCN(Cc2ccccc2)CC1)Cn1c2ccccc2c2ccccc12
+Cc1ccc2nc([nH]c2c1)C1=C(N)N(CC1=O)C1CCCC1 |c:12|
+COc1ccc(cc1)-c1cc2ccccc2n1CC(O)CN1CCOCC1
+OC(=O)C(O)=O.COc1ccc(cc1)-c1cc2ccccc2n1CC(O)CNCCCO
+CS(=O)(=O)N1CCN(CC(O)Cn2c3ccccc3c3ccccc23)CC1
+OC(=O)C(O)=O.Cc1c(C)c2ccccc2n1CC(O)CNCc1ccco1
+Cc1nc(NCCNC(=O)CCCc2ccccc2)cc(n1)N1CCOCC1
+Cc1cc(NCCN2CCOCC2)n2ncc(-c3ccccc3Cl)c2n1
+Cc1nc2c(cnn2c(NCCN2CCOCC2)c1CC=C)-c1ccccc1
+Cl.OC(CNc1cccc(Cl)c1)CN1c2ccccc2Sc2ccccc12
