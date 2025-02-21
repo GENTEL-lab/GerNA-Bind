@@ -32,7 +32,7 @@
 ### If you prefer a faster setup, you can use the provided gernabind.yaml file:
 ```bash
 
-conda env create -f gernabind.yaml
+conda env create -f gernabind.yaml -y
 conda activate gernabind
 
 ```
