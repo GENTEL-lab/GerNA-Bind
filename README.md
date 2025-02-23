@@ -1,6 +1,6 @@
 # GerNA-Bind: Geometric-informed RNA-ligand Binding Specificity Prediction with Deep Learning
 
-✨ Welcome to the official repository for "GerNA-Bind: Geometric-informed RNA-ligand Binding Specificity Prediction with Deep Learning". This work is a collaborative effort by [Yunpeng Xia](https://github.com/DoraemonXia), [Jiayi Li](https://github.com/JiayiLi21), [Jiahua Rao](https://scholar.google.com/citations?user=zeTuIZ4AAAAJ&hl=zh-CN), [Will Hua](https://github.com/WillHua127), [Dong-Jun Yu](https://csbio.njust.edu.cn/djyu_en/), [Xiucai Chen](https://teacher.gdut.edu.cn/chenxiucai/en/jsxx/234857/jsxx/jsxx.htm), and [Shuangjia Zheng](https://zhenglab.sjtu.edu.cn/index.php) from Shanghai Jiaotong University.
+✨ Welcome to the official repository for "GerNA-Bind: Geometric-informed RNA-ligand Binding Specificity Prediction with Deep Learning". This work is a collaborative effort by [Yunpeng Xia](https://github.com/DoraemonXia), [Jiayi Li](https://github.com/JiayiLi21), Chu Yi-Ting, [Jiahua Rao](https://scholar.google.com/citations?user=zeTuIZ4AAAAJ&hl=zh-CN), Chen Jing, [Will Hua](https://github.com/WillHua127), [Dong-Jun Yu](https://csbio.njust.edu.cn/djyu_en/), [Xiucai Chen](https://teacher.gdut.edu.cn/chenxiucai/en/jsxx/234857/jsxx/jsxx.htm), and [Shuangjia Zheng](https://zhenglab.sjtu.edu.cn/index.php) from Shanghai Jiaotong University.
 
 <!-- 🔗 Read our paper: [ArXiv](https://arxiv.org/abs/****.*****) -->
 
@@ -43,9 +43,15 @@ conda activate gernabind
 conda create -y -n gernabind python=3.8
 conda activate gernabind
 
-conda install pytorch==2.0.1 torchvision==0.15.2 pytorch-cuda=12.2 -c pytorch -c nvidia
+#conda install pytorch==2.0.1 torchvision==0.15.2 pytorch-cuda=12.2 -c pytorch -c nvidia
+pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
 
 # Install other dependencies 
+pip install rna-fm==0.2.2
+pip install ml_collections==0.1.1
+pip install simtk==0.1.0
+pip install openmm==8.1.1
+pip install torchdrug==0.2.1
 pip install torch_geometric==2.4.0
 pip install equiformer-pytorch
 pip install edl_pytorch==0.0.2
@@ -54,8 +60,14 @@ pip install biopython==1.79
 pip install pandas==1.5.3
 pip install scikit-learn==1.2.2
 pip install prody==2.4.1
-pip install numpy tqdm
 ```
+
+<!--```bash
+if you have problem like this error information: ImportError: cannot import name 'packaging' from 'pkg_resources' (/xcfhome/ypxia/anaconda3/envs/gernabind/lib/python3.8/site-packages/pkg_resources/__init__.py) with torchdrug, you can try this command below:
+pip install --upgrade packaging
+pip install --upgrade pip setuptools
+```
+-->
 
 ## Data Preparation
 ### Dataset Description
@@ -69,7 +81,7 @@ We use [RhoFold+](https://github.com/ml4bio/RhoFold) to generate RNA 3D Structur
 ### Data Processing
 You can process data through the following steps:
 ```bash
-python data_utils/process_data.py --fasta example/a.fasta --smile example/mol.txt
+python data_utils/process_data.py --fasta example/a.fasta --smile example/mol.txt --RhoFold_path your_RhoFold_project_path --RhoFold_weight RhoFold_model_weight_path
 ```
 And the processed data will be saved in ./data folder as "new_data.pkl" file.
 
@@ -95,6 +107,25 @@ bash Model/get_weights.sh
 <!-- ```bash
 python test_model.py --checkpoint model_weight
 ``` -->
+
+
+<!--
+
+In file included from RNA_wrap.cpp:764:
+/xcfhome/ypxia/anaconda3/envs/gernabind/lib/perl5/5.32/core_perl/CORE/perl.h:861:13: fatal error: xlocale.h: No such file or directory
+  861 | #   include <xlocale.h>
+      |             ^~~~~~~~~~~
+compilation terminated.
+make[3]: *** [Makefile:733: RNA_la-RNA_wrap.lo] Error 1
+make[3]: Leaving directory '/xcfhome/ypxia/resource/ViennaRNA-2.5.1/interfaces/Perl'
+make[2]: *** [Makefile:640: all-recursive] Error 1
+make[2]: Leaving directory '/xcfhome/ypxia/resource/ViennaRNA-2.5.1/interfaces'
+make[1]: *** [Makefile:688: all-recursive] Error 1
+make[1]: Leaving directory '/xcfhome/ypxia/resource/ViennaRNA-2.5.1'
+make: *** [Makefile:579: all] Error 2
+(gernabind) [ypxia@f146 ViennaRNA-2.5.1]$ ./configure --prefix=/xcfhome/ypxia/local/ViennaRNA-2.5.1 --disable-openmp --enable-universal-binary --enable-sse --with-python3 --without-perl
+
+-->
 
 ### RNA Small Molecule Screening
 You can use our model to screening small molecules which can binding target RNA.
