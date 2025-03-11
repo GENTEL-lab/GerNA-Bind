@@ -13,8 +13,8 @@
 ## 🗂 Contents
 
 - [Installation](#installation)
-- [Data Preparation](#data-preparation)
-- [Generate RNA Structure](#generate-rna-structure)
+<!-- - [Data Preparation](#data-preparation)
+- [Generate RNA Structure](#generate-rna-structure) -->
 - [Data Preparation](#data-preparation)
   - [Dataset Description](#dataset-description)
   - [Generate RNA Structure](#generate-rna-structure)
