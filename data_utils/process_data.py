@@ -152,68 +152,151 @@ def process_smiles(smiles_file):
         smiles = f.read().splitlines()
     return smiles
 
+# def main():
+#     parser = argparse.ArgumentParser(description='Process RNA and mol files')
+#     parser.add_argument('--fasta', type=str, required=True, help='Path to the RNA fasta file')
+#     parser.add_argument('--smiles', type=str, required=True, help='Path to the mol txt file')
+#     parser.add_argument('--RhoFold_path', type=str, default="/home/xiayp/Workspace/RhoFold", required=False, help='Path to the RhoFold project')
+#     parser.add_argument('--RhoFold_weight', type=str, default="/home/xiayp/Workspace/RhoFold/pretrained/model_20221010_params.pt", required=False, help='Path to the RhoFold weights')
+#     args = parser.parse_args()
+
+#     rna_seq = process_fasta(args.fasta)[0]
+#     RNA_embedding = get_rna_embeddings(rna_seq)
+#     secondary_structure = get_secondary_structure(args.fasta)
+#     edge_index = torch.tensor(np.array(parse_rna_structure(secondary_structure) ).T, dtype=torch.long)
+#     RNA_data = Data(x=RNA_embedding, edge_index=edge_index)
+
+#     command = [
+#         "python",
+#         args.RhoFold_path + "/inference.py",
+#         "--input_fas", args.fasta,
+#         "--single_seq_pred", "True",
+#         "--output_dir", "./data/tmp",
+#         "--ckpt", args.RhoFold_weight
+#     ]
+#     subprocess.run(command, check=True, capture_output=True, text=True)
+
+#     pdb_file_path = "data/tmp/relaxed_1000_model.pdb"  # 替换为你的 PDB 文件路径
+#     atoms_to_extract = ['C4\'', 'N1', 'P']
+#     RNA_3_coords = extract_atom_coordinates(pdb_file_path,atoms_to_extract)
+#     atoms_to_extract = ['C4\'']
+#     RNA_C4_coords = extract_atom_coordinates(pdb_file_path,atoms_to_extract)
+    
+
+#     smile_list = process_smiles(args.smiles)
+#     Smile_coor_input = {}
+#     for i in range(len(smile_list)):
+#         atoms, coords = inner_smi2coords(smile_list[i])
+#         atoms_id = [ atom_id[atom] for atom in atoms]
+#         Smile_coor_input[smile_list[i]] = (atoms_id, coords)
+
+#     RNA_repre = []
+#     RNA_Graph = []
+#     RNA_C4_coors = []
+#     RNA_coors = []
+#     RNA_feats = []
+
+#     Mol_graph = []
+#     LAS_input = []
+#     Mol_coors = []
+#     Mol_feats = []
+
+#     for j in range(len(smile_list)):
+#         RNA_repre.append( RNA_embedding )
+#         RNA_Graph.append( RNA_data )
+#         RNA_C4_coors.append( RNA_C4_coords[1] )
+#         RNA_coors.append( RNA_3_coords[1] )
+#         RNA_feats.append( RNA_3_coords[0] )
+        
+#         Mol_graph.append( fea.simplify_atom_to_graph_data_obj( Chem.MolFromSmiles(smile_list[j] ) ) )
+#         LAS_input.append( get_LAS_distance_constraint_mask(Chem.MolFromSmiles(smile_list[j])) )
+#         Mol_coors.append( np.array(Smile_coor_input[smile_list[j]][1]) )
+#         Mol_feats.append( Smile_coor_input[smile_list[j]][0] )
+
+#     data = [RNA_repre,Mol_graph,RNA_Graph,RNA_feats,RNA_C4_coors,RNA_coors,Mol_feats,Mol_coors,LAS_input]
+#     with open('data/new_data.pkl', 'wb') as file:
+#         pickle.dump(data, file)
+
+# if __name__ == '__main__':
+#     main()
+
 def main():
     parser = argparse.ArgumentParser(description='Process RNA and mol files')
     parser.add_argument('--fasta', type=str, required=True, help='Path to the RNA fasta file')
     parser.add_argument('--smiles', type=str, required=True, help='Path to the mol txt file')
-    parser.add_argument('--RhoFold_path', type=str, default="/home/xiayp/Workspace/RhoFold", required=False, help='Path to the RhoFold project')
-    parser.add_argument('--RhoFold_weight', type=str, default="/home/xiayp/Workspace/RhoFold/pretrained/model_20221010_params.pt", required=False, help='Path to the RhoFold weights')
+    parser.add_argument('--RhoFold_path', type=str, default="/xcfhome/ypxia/github/RhoFold", required=False)
+    parser.add_argument('--RhoFold_weight', type=str, default="/xcfhome/ypxia/github/RhoFold/pretrained/RhoFold_pretrained.pt", required=False)
     args = parser.parse_args()
 
-    rna_seq = process_fasta(args.fasta)[0]
-    RNA_embedding = get_rna_embeddings(rna_seq)
-    secondary_structure = get_secondary_structure(args.fasta)
-    edge_index = torch.tensor(np.array(parse_rna_structure(secondary_structure) ).T, dtype=torch.long)
-    RNA_data = Data(x=RNA_embedding, edge_index=edge_index)
-
-    command = [
-        "python",
-        args.RhoFold_path + "/inference.py",
-        "--input_fas", args.fasta,
-        "--single_seq_pred", "True",
-        "--output_dir", "./data/tmp",
-        "--ckpt", args.RhoFold_weight
-    ]
-    subprocess.run(command, check=True, capture_output=True, text=True)
-
-    pdb_file_path = "data/tmp/relaxed_1000_model.pdb"  # 替换为你的 PDB 文件路径
-    atoms_to_extract = ['C4\'', 'N1', 'P']
-    RNA_3_coords = extract_atom_coordinates(pdb_file_path,atoms_to_extract)
-    atoms_to_extract = ['C4\'']
-    RNA_C4_coords = extract_atom_coordinates(pdb_file_path,atoms_to_extract)
-    
-
+    rna_records = process_fasta(args.fasta)
     smile_list = process_smiles(args.smiles)
-    Smile_coor_input = {}
-    for i in range(len(smile_list)):
-        atoms, coords = inner_smi2coords(smile_list[i])
-        atoms_id = [ atom_id[atom] for atom in atoms]
-        Smile_coor_input[smile_list[i]] = (atoms_id, coords)
 
     RNA_repre = []
     RNA_Graph = []
     RNA_C4_coors = []
     RNA_coors = []
     RNA_feats = []
-
     Mol_graph = []
     LAS_input = []
     Mol_coors = []
     Mol_feats = []
 
-    for j in range(len(smile_list)):
-        RNA_repre.append( RNA_embedding )
-        RNA_Graph.append( RNA_data )
-        RNA_C4_coors.append( RNA_C4_coords[1] )
-        RNA_coors.append( RNA_3_coords[1] )
-        RNA_feats.append( RNA_3_coords[0] )
-        
-        Mol_graph.append( fea.simplify_atom_to_graph_data_obj( Chem.MolFromSmiles(smile_list[j] ) ) )
-        LAS_input.append( get_LAS_distance_constraint_mask(Chem.MolFromSmiles(smile_list[j])) )
-        Mol_coors.append( np.array(Smile_coor_input[smile_list[j]][1]) )
-        Mol_feats.append( Smile_coor_input[smile_list[j]][0] )
+    for seq_idx, rna_seq in enumerate(rna_records):
+        seq_output_dir = os.path.join("./data/tmp", f"seq_{seq_idx}")
+        os.makedirs(seq_output_dir, exist_ok=True)
 
-    data = [RNA_repre,Mol_graph,RNA_Graph,RNA_feats,RNA_C4_coors,RNA_coors,Mol_feats,Mol_coors,LAS_input]
+        temp_fasta_path = os.path.join(seq_output_dir, "temp.fasta")
+        try:
+            with open(temp_fasta_path, 'w') as temp_fasta:
+                temp_fasta.write(f">seq_{seq_idx}\n{rna_seq}\n")
+
+            RNA_embedding = get_rna_embeddings(rna_seq)
+            secondary_structure = get_secondary_structure(temp_fasta_path)
+            edge_index = torch.tensor(np.array(parse_rna_structure(secondary_structure)).T, dtype=torch.long)
+            RNA_data = Data(x=RNA_embedding, edge_index=edge_index)
+
+            command = [
+                "python",
+                os.path.join(args.RhoFold_path, "inference.py"),
+                "--input_fas", temp_fasta_path,
+                "--single_seq_pred", "True",
+                "--output_dir", seq_output_dir,
+                "--ckpt", args.RhoFold_weight
+            ]
+            subprocess.run(command, check=True, capture_output=True, text=True)
+
+            pdb_file_path = os.path.join(seq_output_dir, "relaxed_1000_model.pdb")
+            atoms_to_extract = ['C4\'', 'N1', 'P']
+            RNA_3_coords = extract_atom_coordinates(pdb_file_path, atoms_to_extract)
+            atoms_to_extract = ['C4\'']
+            RNA_C4_coords = extract_atom_coordinates(pdb_file_path, atoms_to_extract)
+
+            Smile_coor_input = {}
+            for smi in smile_list:
+                atoms, coords = inner_smi2coords(smi)
+                atoms_id = [atom_id[atom] for atom in atoms]
+                Smile_coor_input[smi] = (atoms_id, coords)
+
+            for j in range(len(smile_list)):
+                RNA_repre.append(RNA_embedding)
+                RNA_Graph.append(RNA_data)
+                RNA_C4_coors.append(RNA_C4_coords[1])
+                RNA_coors.append(RNA_3_coords[1])
+                RNA_feats.append(RNA_3_coords[0])
+
+                Mol_graph.append(fea.simplify_atom_to_graph_data_obj(Chem.MolFromSmiles(smile_list[j])))
+                LAS_input.append(get_LAS_distance_constraint_mask(Chem.MolFromSmiles(smile_list[j])))
+                Mol_coors.append(np.array(Smile_coor_input[smile_list[j]][1]))
+                Mol_feats.append(Smile_coor_input[smile_list[j]][0])
+
+        except Exception as e:
+            print(f"Meet error when processing sequence {seq_idx}: {str(e)}")
+            continue
+        finally:
+            if os.path.exists(temp_fasta_path):
+                os.remove(temp_fasta_path)
+
+    data = [RNA_repre, Mol_graph, RNA_Graph, RNA_feats, RNA_C4_coors, RNA_coors, Mol_feats, Mol_coors, LAS_input]
     with open('data/new_data.pkl', 'wb') as file:
         pickle.dump(data, file)
 
