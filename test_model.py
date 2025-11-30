@@ -36,13 +36,10 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 import torch.multiprocessing as mp
 
 def set_random_seeds(seed_value=42):
-    # random seed in python
     random.seed(seed_value)
-    
-    # Numpy
+
     np.random.seed(seed_value)
-    
-    # PyTorch
+
     torch.manual_seed(seed_value)
     torch.cuda.manual_seed(seed_value)
     torch.cuda.manual_seed_all(seed_value)
@@ -52,14 +49,11 @@ def set_random_seeds(seed_value=42):
 set_random_seeds(seed_value=99)
 
 def test(net, dataLoader, batch_size, mode, device, threshold = 0, uncertainty_mode = True):
-    
     output_list = []
     label_list = []
     pairwise_auc_list = []
     confidence_list = []
-    
     mu_list, v_list, alpha_list, beta_list = [],[],[],[]
-    
     with torch.no_grad():
         net.eval()
         for batch_index, [batch_RNA_repre, batch_seq_mask, batch_Mol_Graph, batch_RNA_Graph, batch_RNA_feats, batch_RNA_C4_coors,batch_RNA_coors, batch_RNA_mask, batch_Mol_feats, batch_Mol_coors, batch_Mol_mask, batch_Mol_LAS, batch_label] in enumerate(dataLoader):
@@ -76,14 +70,10 @@ def test(net, dataLoader, batch_size, mode, device, threshold = 0, uncertainty_m
             batch_Mol_mask = batch_Mol_mask.to(device)
             batch_Mol_LAS = batch_Mol_LAS.to(device)
             batch_label = batch_label.to(device)
-            
             affinity_label = batch_label
-            
             affinity_pred, _  = net( batch_RNA_repre, batch_seq_mask, batch_RNA_Graph, batch_Mol_Graph, batch_RNA_feats, batch_RNA_C4_coors, batch_RNA_coors, batch_RNA_mask, batch_Mol_feats, batch_Mol_coors, batch_Mol_mask, batch_Mol_LAS )
-
             output_list += affinity_pred.cpu().detach().numpy().tolist()
             label_list += affinity_label.reshape(-1).tolist()
-        
         output_list = np.array(output_list)
         label_list = np.array(label_list)
         probs = []
@@ -91,8 +81,6 @@ def test(net, dataLoader, batch_size, mode, device, threshold = 0, uncertainty_m
         for alpha in output_list:
             probs.append(alpha[1] / alpha.sum())
         new_output_list = np.array(probs)
-        #regression
-        #combined_affinity_pred = [mu_list,v_list,alpha_list,beta_list]
     
     if mode == "train":
         mcc_threshold, TN, FN, FP, TP, Pre, Sen, Spe, Acc, F1_score, max_mcc, AUC, AUPRC = get_train_metrics( new_output_list.reshape(-1),label_list.reshape(-1))
@@ -106,14 +94,12 @@ def test(net, dataLoader, batch_size, mode, device, threshold = 0, uncertainty_m
         TN, FN, FP, TP, Pre, Sen, Spe, Acc, F1_score, mcc, AUC, AUPRC = get_valid_metrics(new_output_list.reshape(-1),label_list.reshape(-1),threshold )
         test_performance = [TN, FN, FP, TP, Pre, Sen, Spe, Acc, F1_score, mcc, AUC, AUPRC ]
         return test_performance, label_list, output_list
-    
-#train-eval-test function
-def train_and_eval(rank,world_size, trainDataset, trainUnbDataset, validDataset, testDataset, params, batch_size=8, num_epoch=30, model_path=None, port=None):
+
+def eval(rank, world_size, trainDataset, trainUnbDataset, validDataset, testDataset, params, batch_size=8, num_epoch=30, model_path=None):
     device = torch.device(f"cuda:{rank}")
     torch.cuda.set_device(rank)
     os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = port #'12352'
-
+    os.environ['MASTER_PORT'] = '12348'
     dist.init_process_group('nccl', rank=rank, world_size=world_size, timeout=timedelta(minutes=60))
     
     train_sampler = DistributedSampler(trainDataset, num_replicas=world_size,
@@ -124,10 +110,6 @@ def train_and_eval(rank,world_size, trainDataset, trainUnbDataset, validDataset,
         train_unb_DataLoader = torch.utils.data.DataLoader(trainUnbDataset, batch_size=batch_size,collate_fn=custom_collate_fn,num_workers=10,pin_memory=True)
         validDataLoader = torch.utils.data.DataLoader(validDataset, batch_size=batch_size,collate_fn=custom_collate_fn,num_workers=10,pin_memory=True)
         testDataLoader = torch.utils.data.DataLoader(testDataset, batch_size=batch_size,collate_fn=custom_collate_fn,num_workers=10,pin_memory=True)
-        if not os.path.exists(model_path):
-            os.makedirs(model_path)  #this should need to run in rank 0 also, if not, it will conflict in multi threads.
-    ak_model_path = model_path
-    model_path = model_path + "Model_baseline.pth"
     
     net = GerNA(params, trigonometry = True, rna_graph = True, coors = True, coors_3_bead = True, uncertainty=True)  #define the network
     
@@ -150,87 +132,29 @@ def train_and_eval(rank,world_size, trainDataset, trainUnbDataset, validDataset,
     pytorch_total_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
     print('total num params', pytorch_total_params)
 
-    criterion1 = nn.MSELoss()
-    soft_loss = nn.CrossEntropyLoss()
-    confidence_criterion = nn.BCELoss()
-
-    optimizer = optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr=0.0003, weight_decay=0, amsgrad=True)  #0.0005
-    
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
-
     max_auroc = 0
     
     train_loss = []
 
-    for epoch in range(num_epoch):
-        
-        for param_group in optimizer.param_groups:
-            print('learning rate:', param_group['lr'])
-        train_output_list = []
-        train_label_list = []
-        total_loss = 0
-        affinity_loss = 0
-        conf_loss= 0
-        pairwise_loss = 0
-        net.train()
-        
-        total_loss = torch.zeros(2).to(rank)
-        
-        for batch_index, [batch_RNA_repre, batch_seq_mask, batch_Mol_Graph, batch_RNA_Graph, batch_RNA_feats, batch_RNA_C4_coors, batch_RNA_coors, batch_RNA_mask, batch_Mol_feats, batch_Mol_coors, batch_Mol_mask, batch_Mol_LAS, batch_label] in enumerate(trainDataLoader):
-            if batch_index % 1000 == 0:
-               print('epoch', epoch, 'batch', batch_index)
-            batch_RNA_repre = batch_RNA_repre.to(device)
-            batch_seq_mask = batch_seq_mask.to(device)
-            batch_Mol_Graph = batch_Mol_Graph.to(device)
-            batch_RNA_Graph = batch_RNA_Graph.to(device)
-            batch_RNA_feats = batch_RNA_feats.to(device)
-            batch_RNA_C4_coors = batch_RNA_C4_coors.to(device)
-            batch_RNA_coors = batch_RNA_coors.to(device)
-            batch_RNA_mask = batch_RNA_mask.to(device)
-            batch_Mol_feats = batch_Mol_feats.to(device)
-            batch_Mol_coors = batch_Mol_coors.to(device)
-            batch_Mol_mask = batch_Mol_mask.to(device)
-            batch_Mol_LAS = batch_Mol_LAS.to(device)
-            batch_label = batch_label.to(device)
-            affinity_label = batch_label.reshape(-1,1)
-            
-            optimizer.zero_grad()
-            
-            affinity_pred, _ = net( batch_RNA_repre, batch_seq_mask, batch_RNA_Graph, batch_Mol_Graph, batch_RNA_feats, batch_RNA_C4_coors, batch_RNA_coors, batch_RNA_mask, batch_Mol_feats, batch_Mol_coors, batch_Mol_mask, batch_Mol_LAS )
-            loss = evidential_classification(  affinity_pred,  affinity_label.long().reshape(-1), lamb=0.1 )
-            loss.backward()
-            nn.utils.clip_grad_norm_(net.parameters(), 5)
-            optimizer.step()
-            total_loss[0] += float(loss.data*len(batch_RNA_repre))
-            total_loss[1] += len(batch_RNA_repre)
-            
-        dist.all_reduce(total_loss, op=dist.ReduceOp.SUM)
-        loss = float(total_loss[0] / total_loss[1])
-        scheduler.step()
-        train_loss.append( total_loss )
+    train_output_list = []
+    train_label_list = []
+    total_loss = 0
+    affinity_loss = 0
+    conf_loss= 0
+    pairwise_loss = 0
+    
+    if rank==0:
+        perf_name = ['TN', 'FN', 'FP', 'TP', 'Pre', 'Sen', 'Spe', 'Acc', 'F1_score', 'Mcc', 'AUC', 'AUPRC']
+        train_performance, train_label, train_output = test(net.module, train_unb_DataLoader, batch_size, "train",device, uncertainty_mode=True)
+        threshold = train_performance[0]
+        print('threshold:',threshold )
+        print_perf = [perf_name[i]+' '+str(round(train_performance[i+1], 6)) for i in range(len(perf_name))]
+        print( 'train', len(train_output), ' '.join(print_perf))
 
-        if rank==0:
-            perf_name = ['TN', 'FN', 'FP', 'TP', 'Pre', 'Sen', 'Spe', 'Acc', 'F1_score', 'Mcc', 'AUC', 'AUPRC']
-            train_performance, train_label, train_output = test(net.module, train_unb_DataLoader, batch_size, "train",device, uncertainty_mode=True)
-
-            threshold = train_performance[0]
-            print('threshold:',threshold )
-            print_perf = [perf_name[i]+' '+str(round(train_performance[i+1], 6)) for i in range(len(perf_name))] #第一个是threshold
-            print( 'train', len(train_output), ' '.join(print_perf))
-
-            valid_performance, valid_label, valid_output = test(net.module, validDataLoader, batch_size, "valid", device, threshold, uncertainty_mode = True)
-            print_perf = [perf_name[i]+' '+str(round(valid_performance[i], 6)) for i in range(len(perf_name))]
-            print('valid', len(valid_output), ' '.join(print_perf) )
-
-            if valid_performance[-2] > max_auroc:
-                max_auroc = valid_performance[-2]
-                #revise here for DDP train
-                #torch.save(net.state_dict(), model_path)
-                torch.save(net.module.state_dict(), model_path)
-                test_performance, test_label, test_output = test(net.module, testDataLoader, batch_size,"test", device, threshold,uncertainty_mode = True)
-                print_perf = [perf_name[i]+' '+str(round(test_performance[i], 6)) for i in range(len(perf_name))]
-                print('test ', len(test_output), ' '.join(print_perf))
-        dist.barrier()
+        test_performance, test_label, test_output = test(net.module, testDataLoader, batch_size,"test", device, threshold,uncertainty_mode = True)
+        print_perf = [perf_name[i]+' '+str(round(test_performance[i], 6)) for i in range(len(perf_name))]
+        print('test ', len(test_output), ' '.join(print_perf))
+    dist.barrier()
         
     if rank==0:
         print('Finished Training')
@@ -241,49 +165,38 @@ def train_and_eval(rank,world_size, trainDataset, trainUnbDataset, validDataset,
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Train and evaluate the model')
-    parser.add_argument('--dataset', type=str, default='Robin', help='Path to the dataset file')
-    parser.add_argument('--split_method', type=str, default='KFold', choices=['random', 'RNA', 'mol', 'both'], help='Method to split the dataset')
-    parser.add_argument('--model_output_path', type=str, default='Model/', help='Path to save the model')
-    parser.add_argument('--epoch', type=int, default=12, help='Number of training epochs')
-    parser.add_argument('--batch_size', type=int, default=12, help='Batch size for training')
+    parser.add_argument('--dataset', type=str, default='Robin', choices=['Robin', 'Biosensor'], help='Path to the dataset file')
+    parser.add_argument('--split_method', type=str, default='random', choices=['random', 'RNA', 'mol', 'both'], help='Method to split the dataset')
+    parser.add_argument('--model_path', type=str, default='Model/Robin_Model_baseline.pth', help='Path to load the model')
+    parser.add_argument('--batch_size', type=int, default=4, help='Batch size for training')
 
     parser.add_argument('--GNN_depth', type=int, default=4, help='Depth of the GNN')
     parser.add_argument('--DMA_depth', type=int, default=2, help='Depth of the DMA')
     parser.add_argument('--hidden_size1', type=int, default=128, help='Size of the first hidden layer')
     parser.add_argument('--hidden_size2', type=int, default=128, help='Size of the second hidden layer')
-    parser.add_argument('--cuda', type=str, default=0, help='Device to use, e.g., "cuda:0", "cuda:1" ')
-    parser.add_argument('--port', type=str, default="10086", help='Default port to use')
+    parser.add_argument('--cuda', type=str, default="0", help='Device to use, e.g., "cuda:0", "cuda:1" ')
 
     args = parser.parse_args()
 
     os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'DETAIL'
     os.environ['CUDA_VISIBLE_DEVICES'] = args.cuda
+    dataset = args.dataset
+    split_method = args.split_method
+
 
     train_path = "/data/ypxia/github/GerNA-Bind/open_data/"+dataset+"/"+split_method+"/train_data.pkl"
     valid_path = "/data/ypxia/github/GerNA-Bind/open_data/"+dataset+"/"+split_method+"/valid_data.pkl"
     test_path = "/data/ypxia/github/GerNA-Bind/open_data/"+dataset+"/"+split_method+"/test_data.pkl"
-    trainUnbDataset = GerNA_dataset(train_path)
+    trainDataset = GerNA_dataset(train_path)
     validDataset = GerNA_dataset(valid_path)
     testDataset = GerNA_dataset(test_path)
-
-    with open(train_path,'rb') as f:
-        _,_,_,_,_,_,_,_,_,label = pickle.load(f)
-    
-    train_index = [ i for i in range(len(trainUnbDataset)) ]
-    train_index_bal = list(train_index[:])
-    for i in range(len(train_index)):
-        if label[train_index]==1:
-            train_index_bal.extend( [train_index_bal[i]]*10 )
-
-    trainDataset = data.Subset(trainUnbDataset,train_index_bal)
 
     n_epoch = args.epoch
     batch_size = args.batch_size
     params = [args.GNN_depth, args.DMA_depth, args.hidden_size1, args.hidden_size2]
-    model_path = args.model_output_path
-    port = args.port
-
+    model_path = args.model_path
+    
     world_size = torch.cuda.device_count()
     print('Let\'s use', world_size, 'GPUs!')
-    func_args = (world_size, trainDataset, trainUnbDataset, validDataset,testDataset,params, batch_size, n_epoch, model_path, port)
-    mp.spawn(train_and_eval, args=func_args, nprocs=world_size, join=True)
+    func_args = (world_size, trainDataset, trainDataset, validDataset,testDataset,params, batch_size, n_epoch, model_path)
+    mp.spawn(eval, args=func_args, nprocs=world_size, join=True)

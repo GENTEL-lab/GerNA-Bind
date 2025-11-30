@@ -86,13 +86,23 @@ python data_utils/process_data.py --fasta example/a.fasta --smile example/mol.tx
 And the processed data will be saved in ./data folder as "new_data.pkl" file.
 
 ### Dataset Download
-We process the processed data with Robin & Biosensor dataset. You can download the processed data from [Zenodo](https://zenodo.org/records/14808549).
+We process the processed data with Robin & Biosensor dataset. You can download the processed data from [Zenodo](https://zenodo.org/records/17770641).
+
+We also provide the scripts for downloading the dataset.
+Simply run:
+```bash
+bash download_dataset.sh
+```
 
 ## Using GerNA-Bind
 ### Model Training
 We provide the training scripts that you can train the model yourself.
 ```bash
 python train_model.py --dataset Robin --split_method random --model_output_path Model/
+```
+You can also evaluate the model using the testing script:
+```bash
+python test_model.py --dataset Robin --split_method random --model_path Model/Robin_random.pth --cuda 0
 ```
 
 ### CheckPoints
@@ -102,30 +112,6 @@ Download the model weights and put into the "Model" folder, which contains the m
 bash Model/get_weights.sh
 ```
 
-<!-- #### Process Data -->
-
-<!-- ```bash
-python test_model.py --checkpoint model_weight
-``` -->
-
-
-<!--
-
-In file included from RNA_wrap.cpp:764:
-/xcfhome/ypxia/anaconda3/envs/gernabind/lib/perl5/5.32/core_perl/CORE/perl.h:861:13: fatal error: xlocale.h: No such file or directory
-  861 | #   include <xlocale.h>
-      |             ^~~~~~~~~~~
-compilation terminated.
-make[3]: *** [Makefile:733: RNA_la-RNA_wrap.lo] Error 1
-make[3]: Leaving directory '/xcfhome/ypxia/resource/ViennaRNA-2.5.1/interfaces/Perl'
-make[2]: *** [Makefile:640: all-recursive] Error 1
-make[2]: Leaving directory '/xcfhome/ypxia/resource/ViennaRNA-2.5.1/interfaces'
-make[1]: *** [Makefile:688: all-recursive] Error 1
-make[1]: Leaving directory '/xcfhome/ypxia/resource/ViennaRNA-2.5.1'
-make: *** [Makefile:579: all] Error 2
-(gernabind) [ypxia@f146 ViennaRNA-2.5.1]$ ./configure --prefix=/xcfhome/ypxia/local/ViennaRNA-2.5.1 --disable-openmp --enable-universal-binary --enable-sse --with-python3 --without-perl
-
--->
 
 ### RNA Small Molecule Screening
 You can use our model to screening small molecules which can binding target RNA.
@@ -153,7 +139,7 @@ No Commercial use of either the model nor generated data, details to be found in
 @article{gerna2025,
   title={GerNA-Bind: Geometric-informed RNA-ligand Binding Specificity Prediction with Deep Learning},
   author={Yunpeng Xia, Jiayi Li, Jiahua Rao, Dong-Jun Yu, Xiucai Chen and Shuangjia Zheng},
-  journal={arXiv preprint arXiv:****.*****},
+  journal={Nature Machine Intelligence},
   year={2025}
 }
 ``` -->

@@ -1,10 +1,12 @@
 #!bash
 
 #GerNA-Bind's model weights for Robin and Biosensor dataset, respectively.
-wget -O Model/Robin_Model_baseline.pth https://zenodo.org/records/14808549/files/Robin_Model_baseline.pth?download=1
-wget -O Model/Biosensor_Model_baseline.pth https://zenodo.org/records/14808549/files/Biosensor_Model_baseline.pth?download=1
-wget -O Model/Hariboss_Model_baseline.pth https://zenodo.org/records/14808549/files/Hariboss_Model_baseline.pth?download=1
+wget -O Model/Robin_random.pth https://zenodo.org/records/17770641/files/Robin_random.pth?download=1
+wget -O Model/Robin_RNA.pth https://zenodo.org/records/17770641/files/Robin_RNA.pth?download=1
+wget -O Model/Robin_mol.pth https://zenodo.org/records/17770641/files/Robin_mol.pth?download=1
+wget -O Model/Robin_both.pth https://zenodo.org/records/17770641/files/Robin_both.pth?download=1
 
-wget -O data/Biosensor/Biosensor_all_data_3_coors_C4.pkl https://zenodo.org/records/14808549/files/Biosensor_all_data_3_coors_C4.pkl?download=1
-wget -O data/Robin/Robin_all_data_3_coors_C4.pkl https://zenodo.org/records/14808549/files/Robin_all_data_3_coors_C4.pkl?download=1
-wget -O data/Hariboss/Hariboss_2d_data.pkl https://zenodo.org/records/14808549/files/Hariboss_2d_data.pkl?download=1
+wget -O Model/Biosensor_random.pth https://zenodo.org/records/17770641/files/Biosensor_random.pth?download=1
+wget -O Model/Biosensor_RNA.pth https://zenodo.org/records/17770641/files/Biosensor_RNA.pth?download=1
+wget -O Model/Biosensor_mol.pth https://zenodo.org/records/17770641/files/Biosensor_mol.pth?download=1
+wget -O Model/Biosensor_both.pth https://zenodo.org/records/17770641/files/Biosensor_both.pth?download=1
