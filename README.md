@@ -1,6 +1,6 @@
-# GerNA-Bind: Geometric-informed RNA-ligand Binding Specificity Prediction with Deep Learning
-
-✨ Welcome to the official repository for "GerNA-Bind: Geometric-informed RNA-ligand Binding Specificity Prediction with Deep Learning". This work is a collaborative effort by [Yunpeng Xia](https://github.com/DoraemonXia), [Jiayi Li](https://github.com/JiayiLi21), Chu Yi-Ting, [Jiahua Rao](https://scholar.google.com/citations?user=zeTuIZ4AAAAJ&hl=zh-CN), Chen Jing, [Will Hua](https://github.com/WillHua127), [Dong-Jun Yu](https://csbio.njust.edu.cn/djyu_en/), [Xiucai Chen](https://teacher.gdut.edu.cn/chenxiucai/en/jsxx/234857/jsxx/jsxx.htm), and [Shuangjia Zheng](https://zhenglab.sjtu.edu.cn/index.php) from Shanghai Jiaotong University.
+<!--# GerNA-Bind: Geometric-informed RNA-ligand Binding Specificity Prediction with Deep Learning-->
+# Deciphering RNA-Ligand Binding Specificity with GerNA-Bind
+✨ Welcome to the official repository for "Deciphering RNA-Ligand Binding Specificity with GerNA-Bind". This work is a collaborative effort by [Yunpeng Xia](https://github.com/DoraemonXia), [Jiayi Li](https://github.com/JiayiLi21), Chu Yi-Ting, [Jiahua Rao](https://scholar.google.com/citations?user=zeTuIZ4AAAAJ&hl=zh-CN), Chen Jing, [Will Hua](https://github.com/WillHua127), [Dong-Jun Yu](https://csbio.njust.edu.cn/djyu_en/), [Xiucai Chen](https://teacher.gdut.edu.cn/chenxiucai/en/jsxx/234857/jsxx/jsxx.htm), and [Shuangjia Zheng](https://zhenglab.sjtu.edu.cn/index.php) from Shanghai Jiaotong University.
 
 <!-- 🔗 Read our paper: [ArXiv](https://arxiv.org/abs/****.*****) -->
 
