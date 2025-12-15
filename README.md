@@ -70,6 +70,7 @@ pip install --upgrade pip setuptools
 -->
 
 ## Data Preparation
+We will update the usage of building datasets and how to build your own datasets for training soon.
 ### Dataset Description
 Refer to the following guides for setting up datasets:
 - RNA-Small Molecule Screening datasets: [Robin](https://pubmed.ncbi.nlm.nih.gov/36584293/) and [Biosensor](https://pmc.ncbi.nlm.nih.gov/articles/PMC9477273/)
